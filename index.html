@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🚦 City Chaos Driver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: #0b0e1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            touch-action: none;
+        }
+        .game-wrapper {
+            background: #131a2c;
+            padding: 16px;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            border: 1px solid #2d3f66;
+            max-width: 820px;
+            width: 100%;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 16px;
+            background: #1a2338;
+            box-shadow: inset 0 0 30px rgba(0, 20, 60, 0.6);
+            width: 100%;
+            height: auto;
+            aspect-ratio: 800 / 600;
+            touch-action: none;
+        }
+        .ui-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            color: #a8c8ff;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0 4px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .ui-bar .score {
+            background: #0f1629;
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid #2e4a7a;
+            letter-spacing: 1px;
+            font-size: 0.95rem;
+        }
+        .ui-bar .high-score {
+            background: #1a1f33;
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid #f0c06055;
+            color: #f0c060;
+            font-size: 0.85rem;
+        }
+        .ui-bar .mode-tag {
+            background: #1f3355;
+            padding: 4px 16px;
+            border-radius: 40px;
+            color: #f0c060;
+            border: 1px solid #f0c06055;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .btn-group button {
+            background: #1f3355;
+            border: none;
+            color: #d0e4ff;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #3b5a88;
+            touch-action: manipulation;
+        }
+        .btn-group button:hover {
+            background: #2d4a7a;
+            transform: scale(1.02);
+            color: white;
+        }
+        .btn-group button.active {
+            background: #f0c060;
+            color: #0b0e1a;
+            border-color: #f0c060;
+        }
+        .controls-hint {
+            color: #5f7ca0;
+            font-size: 0.7rem;
+            margin-top: 6px;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+        /* Mobile joystick container */
+        #touchControls {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 120px;
+            margin-top: 10px;
+            touch-action: none;
+        }
+        #joystickArea {
+            position: absolute;
+            left: 10px;
+            bottom: 0;
+            width: 110px;
+            height: 110px;
+            background: rgba(30, 50, 80, 0.6);
+            border-radius: 60px;
+            border: 2px solid #3b5a88aa;
+            touch-action: none;
+        }
+        #joystickKnob {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            background: radial-gradient(circle, #80b0ff, #3060aa);
+            border-radius: 30px;
+            top: 31px;
+            left: 31px;
+            box-shadow: 0 0 20px #60a0ff66;
+            pointer-events: none;
+            touch-action: none;
+        }
+        #actionBtn {
+            position: absolute;
+            right: 20px;
+            bottom: 10px;
+            width: 70px;
+            height: 70px;
+            border-radius: 40px;
+            background: radial-gradient(circle, #ff6644, #aa2211);
+            border: 3px solid #ffaa77;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            box-shadow: 0 0 30px #ff442266;
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        #actionBtn:active {
+            transform: scale(0.92);
+        }
+        @media (pointer: coarse) {
+            #touchControls {
+                display: block !important;
+            }
+            .controls-hint {
+                display: none;
+            }
+        }
+        @media (max-width: 500px) {
+            .game-wrapper {
+                padding: 8px;
+            }
+            .ui-bar {
+                font-size: 0.75rem;
+            }
+            .btn-group button {
+                font-size: 0.65rem;
+                padding: 3px 10px;
+            }
+            #joystickArea {
+                width: 80px;
+                height: 80px;
+            }
+            #joystickKnob {
+                width: 36px;
+                height: 36px;
+                top: 22px;
+                left: 22px;
+            }
+            #actionBtn {
+                width: 56px;
+                height: 56px;
+                font-size: 22px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="ui-bar">
+            <span class="score">🏆 <span id="scoreDisplay">0</span></span>
+            <span class="high-score">⭐ BEST <span id="highScoreDisplay">0</span></span>
+            <span class="mode-tag" id="modeDisplay">🚗 DRIVING</span>
+            <div class="btn-group">
+                <button id="modeDrive" class="active">🚗 Drive</button>
+                <button id="modePark">🅿️ Park</button>
+                <button id="resetBtn">🔄</button>
+            </div>
+        </div>
+
+        <div class="controls-hint">
+            ⬆⬇⬅➡ or WASD · Park in green zone · Survive traffic!
+        </div>
+
+        <!-- Touch controls -->
+        <div id="touchControls">
+            <div id="joystickArea">
+                <div id="joystickKnob"></div>
+            </div>
+            <div id="actionBtn">⏎</div>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  CITY CHAOS DRIVER  –  with Touch + High Scores + Particles
+        // ================================================================
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('scoreDisplay');
+        const highScoreSpan = document.getElementById('highScoreDisplay');
+        const modeSpan = document.getElementById('modeDisplay');
+
+        const W = 800,
+            H = 600;
+
+        // ---- high score ----
+        let highScore = parseInt(localStorage.getItem('cityChaosHigh')) || 0;
+        highScoreSpan.textContent = highScore;
+
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('cityChaosHigh', String(highScore));
+                highScoreSpan.textContent = highScore;
+            }
+        }
+
+        // ---- game state ----
+        let mode = 'driving';
+        let score = 0;
+        let gameOver = false;
+        let frame = 0;
+        let keys = {};
+        let particles = [];
+        let popupText = null; // { text, x, y, life, color }
+
+        // ---- player ----
+        const player = {
+            x: 400,
+            y: 500,
+            w: 40,
+            h: 64,
+            speed: 5,
+            dx: 0,
+            dy: 0
+        };
+
+        const roadOffset = 120;
+
+        // ---- driving ----
+        let obstacles = [];
+        const BASE_SPAWN = 28;
+        let speedMultiplier = 1;
+
+        // ---- parking ----
+        let parkZone = { x: 0, y: 0, w: 80, h: 70 };
+        let parkTimer = 0;
+        const PARK_TIME_LIMIT = 420;
+        let parkStarted = false;
+
+        // ---- touch joystick ----
+        let joystickActive = false;
+        let joystickDX = 0,
+            joystickDY = 0;
+        const joystickArea = document.getElementById('joystickArea');
+        const joystickKnob = document.getElementById('joystickKnob');
+        const actionBtn = document.getElementById('actionBtn');
+        const maxDist = 35;
+
+        // ---- particles ----
+        function spawnParticles(x, y, count, color, speed) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = (Math.random() * 2 + 1) * (speed || 3);
+                particles.push({
+                    x,
+                    y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd - 1,
+                    life: 40 + Math.random() * 40,
+                    maxLife: 80,
+                    size: 4 + Math.random() * 8,
+                    color: color || `hsl(${Math.random()*60+20}, 100%, 60%)`
+                });
+            }
+        }
+
+        function spawnCrashParticles(x, y) {
+            spawnParticles(x, y, 50, '#ff8844', 5);
+            spawnParticles(x, y, 30, '#ffcc44', 4);
+            spawnParticles(x, y, 20, '#ff4444', 6);
+        }
+
+        function spawnParkSuccess(x, y) {
+            spawnParticles(x, y, 60, '#80ff90', 4);
+            spawnParticles(x, y, 40, '#40ffc0', 5);
+            spawnParticles(x, y, 30, '#ffff80', 3);
+        }
+
+        // ---- helpers ----
+        function resetGame() {
+            gameOver = false;
+            score = 0;
+            frame = 0;
+            obstacles = [];
+            particles = [];
+            popupText = null;
+            player.x = 400;
+            player.y = 480;
+            player.dx = 0;
+            player.dy = 0;
+            parkTimer = 0;
+            parkStarted = false;
+            speedMultiplier = 1;
+            // randomize park zone
+            parkZone.x = 180 + Math.random() * 340;
+            parkZone.y = 160 + Math.random() * 200;
+            parkZone.w = 70 + Math.floor(Math.random() * 30);
+            parkZone.h = 60 + Math.floor(Math.random() * 25);
+            updateScoreDisplay();
+            // reset joystick
+            joystickDX = 0;
+            joystickDY = 0;
+            joystickKnob.style.transform = 'translate(0px, 0px)';
+        }
+
+        function updateScoreDisplay() {
+            scoreSpan.textContent = score;
+        }
+
+        function rectCollide(a, b) {
+            return a.x < b.x + b.w && a.x + a.w > b.x &&
+                a.y < b.y + b.h && a.y + a.h > b.y;
+        }
+
+        // ---- spawn obstacle ----
+        function spawnObstacle() {
+            const type = Math.random();
+            let w, h, speed, color, label;
+            const lane = Math.floor(Math.random() * 3);
+            const x = roadOffset + 40 + lane * 160 + Math.random() * 40;
+
+            if (type < 0.45) {
+                w = 36 + Math.random() * 16;
+                h = 56 + Math.random() * 16;
+                speed = (1.2 + Math.random() * 1.8) * speedMultiplier;
+                color = `hsl(${Math.floor(Math.random()*60+200)}, 70%, 50%)`;
+                label = '🚗';
+            } else if (type < 0.75) {
+                w = 20;
+                h = 32;
+                speed = (2.0 + Math.random() * 2.5) * speedMultiplier;
+                color = '#e0b040';
+                label = '🛵';
+            } else {
+                w = 18;
+                h = 28;
+                speed = (1.0 + Math.random() * 2.0) * speedMultiplier;
+                color = '#b0d0ff';
+                label = '🚶';
+            }
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            obstacles.push({
+                x,
+                y: dir === 1 ? -h : H + h,
+                w,
+                h,
+                speed: speed * dir,
+                color,
+                label,
+                lane
+            });
+        }
+
+        // ---- update driving ----
+        function updateDriving() {
+            if (gameOver) return;
+
+            // speed ramps up slowly
+            speedMultiplier = 1 + frame / 1800;
+
+            // player movement (keyboard)
+            let dx = 0,
+                dy = 0;
+            if (keys['ArrowUp'] || keys['KeyW']) dy = -player.speed;
+            if (keys['ArrowDown'] || keys['KeyS']) dy = player.speed;
+            if (keys['ArrowLeft'] || keys['KeyA']) dx = -player.speed;
+            if (keys['ArrowRight'] || keys['KeyD']) dx = player.speed;
+
+            // joystick overrides
+            if (joystickActive) {
+                const mag = Math.hypot(joystickDX, joystickDY);
+                if (mag > 0.1) {
+                    const norm = Math.min(1, mag);
+                    dx = (joystickDX / mag) * player.speed * norm;
+                    dy = (joystickDY / mag) * player.speed * norm;
+                } else {
+                    dx = 0;
+                    dy = 0;
+                }
+            }
+
+            if (dx !== 0 && dy !== 0) { dx *= 0.707;
+                dy *= 0.707; }
+            player.x += dx;
+            player.y += dy;
+
+            player.x = Math.max(roadOffset + 6, Math.min(roadOffset + 560 - player.w, player.x));
+            player.y = Math.max(30, Math.min(H - 30 - player.h, player.y));
+
+            // spawn
+            const spawnRate = Math.max(12, BASE_SPAWN - Math.floor(frame / 300));
+            if (frame % spawnRate === 0 && obstacles.length < 20) {
+                spawnObstacle();
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const o = obstacles[i];
+                o.y += o.speed;
+                if (o.y > H + 60 || o.y < -60) {
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+                if (rectCollide(player, o)) {
+                    gameOver = true;
+                    spawnCrashParticles(player.x + player.w / 2, player.y + player.h / 2);
+                    updateHighScore();
+                    return;
+                }
+            }
+
+            if (frame % 6 === 0) score += 1;
+            updateScoreDisplay();
+        }
+
+        // ---- update parking ----
+        function updateParking() {
+            if (gameOver) return;
+
+            let dx = 0,
+                dy = 0;
+            if (keys['ArrowUp'] || keys['KeyW']) dy = -2.2;
+            if (keys['ArrowDown'] || keys['KeyS']) dy = 2.2;
+            if (keys['ArrowLeft'] || keys['KeyA']) dx = -2.2;
+            if (keys['ArrowRight'] || keys['KeyD']) dx = 2.2;
+
+            if (joystickActive) {
+                const mag = Math.hypot(joystickDX, joystickDY);
+                if (mag > 0.1) {
+                    const norm = Math.min(1, mag);
+                    dx = (joystickDX / mag) * 2.2 * norm;
+                    dy = (joystickDY / mag) * 2.2 * norm;
+                } else {
+                    dx = 0;
+                    dy = 0;
+                }
+            }
+
+            if (dx !== 0 && dy !== 0) { dx *= 0.707;
+                dy *= 0.707; }
+            player.x += dx;
+            player.y += dy;
+
+            player.x = Math.max(roadOffset + 10, Math.min(roadOffset + 560 - player.w, player.x));
+            player.y = Math.max(40, Math.min(H - 40 - player.h, player.y));
+
+            if (!parkStarted) { parkStarted = true;
+                parkTimer = 0; }
+            parkTimer++;
+
+            const tolerance = 8;
+            const inZone = player.x + tolerance > parkZone.x &&
+                player.x + player.w - tolerance < parkZone.x + parkZone.w &&
+                player.y + tolerance > parkZone.y &&
+                player.y + player.h - tolerance < parkZone.y + parkZone.h;
+
+            if (inZone && parkTimer > 20) {
+                const bonus = Math.max(10, 120 - Math.floor(parkTimer / 3));
+                score += bonus;
+                spawnParkSuccess(parkZone.x + parkZone.w / 2, parkZone.y + parkZone.h / 2);
+                popupText = {
+                    text: `🎉 +${bonus} PARK!`,
+                    x: 400,
+                    y: 260,
+                    life: 90,
+                    color: '#80ff90'
+                };
+                gameOver = true;
+                updateHighScore();
+                return;
+            }
+
+            if (parkTimer > PARK_TIME_LIMIT) {
+                gameOver = true;
+                spawnCrashParticles(player.x + player.w / 2, player.y + player.h / 2);
+                updateHighScore();
+                return;
+            }
+
+            if (frame % 10 === 0) score = Math.max(0, score - 1);
+            updateScoreDisplay();
+        }
+
+        // ---- main update ----
+        function update() {
+            frame++;
+            // update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08;
+                p.life--;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            if (popupText) {
+                popupText.life--;
+                popupText.y -= 0.4;
+                if (popupText.life <= 0) popupText = null;
+            }
+
+            if (gameOver) return;
+
+            if (mode === 'driving') updateDriving();
+            else updateParking();
+        }
+
+        // ---- drawing ----
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // sky
+            const grad = ctx.createLinearGradient(0, 0, 0, H);
+            grad.addColorStop(0, '#0a1020');
+            grad.addColorStop(0.6, '#141f33');
+            grad.addColorStop(1, '#1c2a40');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            // buildings
+            for (let i = 0; i < 14; i++) {
+                const bx = i * 60 + 10;
+                const bw = 40 + Math.sin(i * 2) * 12;
+                const bh = 80 + Math.sin(i * 1.5) * 50 + 60;
+                ctx.fillStyle = '#1f2d4a';
+                ctx.shadowColor = '#2a4a7a33';
+                ctx.shadowBlur = 18;
+                ctx.fillRect(bx, H - bh - 40, bw, bh);
+                for (let wy = 0; wy < bh - 20; wy += 22) {
+                    for (let wx = 0; wx < bw - 12; wx += 18) {
+                        if (Math.random() > 0.3 || i % 2 === 0) {
+                            ctx.fillStyle = `hsl(45, 80%, ${50 + Math.sin(frame*0.02 + i + wy)*20}%)`;
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = '#f0c06044';
+                            ctx.fillRect(bx + 6 + wx, H - bh - 40 + 12 + wy, 8, 12);
+                        }
+                    }
+                }
+            }
+            ctx.shadowBlur = 0;
+
+            // road
+            ctx.fillStyle = '#1e2a3a';
+            ctx.fillRect(roadOffset, 0, 560, H);
+            ctx.strokeStyle = '#5a7a9a';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([18, 22]);
+            ctx.beginPath();
+            ctx.moveTo(roadOffset + 10, 0);
+            ctx.lineTo(roadOffset + 10, H);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(roadOffset + 550, 0);
+            ctx.lineTo(roadOffset + 550, H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = '#b0d0ff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([30, 30]);
+            ctx.lineDashOffset = -frame * 2;
+            ctx.beginPath();
+            ctx.moveTo(roadOffset + 280, 0);
+            ctx.lineTo(roadOffset + 280, H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            for (let i = 0; i < 3; i++) {
+                const lx = roadOffset + 80 + i * 160;
+                ctx.strokeStyle = '#3a5a7a44';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([10, 20]);
+                ctx.beginPath();
+                ctx.moveTo(lx, 0);
+                ctx.lineTo(lx, H);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // park zone
+            if (mode === 'parking' && !gameOver) {
+                ctx.fillStyle = 'rgba(80, 255, 120, 0.15)';
+                ctx.strokeStyle = '#80ff90';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#80ff9066';
+                ctx.shadowBlur = 24;
+                ctx.fillRect(parkZone.x, parkZone.y, parkZone.w, parkZone.h);
+                ctx.strokeRect(parkZone.x, parkZone.y, parkZone.w, parkZone.h);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#80ff90cc';
+                ctx.font = 'bold 22px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('🅿', parkZone.x + parkZone.w / 2, parkZone.y + parkZone.h / 2 + 8);
+                const progress = Math.min(1, parkTimer / PARK_TIME_LIMIT);
+                ctx.fillStyle = '#1a2a3a';
+                ctx.fillRect(roadOffset + 20, 20, 200, 16);
+                ctx.fillStyle = progress > 0.8 ? '#ff6060' : '#60c0ff';
+                ctx.fillRect(roadOffset + 22, 22, Math.max(0, (1 - progress) * 196), 12);
+                ctx.fillStyle = '#c0e0ff';
+                ctx.font = '11px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(`⏱ ${Math.ceil((1 - progress) * 7)}s`, roadOffset + 24, 33);
+            }
+
+            // obstacles
+            if (mode === 'driving') {
+                for (const o of obstacles) {
+                    ctx.shadowColor = '#00000066';
+                    ctx.shadowBlur = 16;
+                    ctx.fillStyle = o.color;
+                    ctx.strokeStyle = '#ffffff44';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.roundRect(o.x, o.y, o.w, o.h, 6);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    ctx.font = `${o.h * 0.6}px monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText(o.label, o.x + o.w / 2, o.y + o.h / 2 + 1);
+                }
+                ctx.shadowBlur = 0;
+            }
+
+            // particles
+            for (const p of particles) {
+                const alpha = p.life / p.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+
+            // player car
+            ctx.shadowColor = '#60b0ff88';
+            ctx.shadowBlur = 28;
+            const grd = ctx.createLinearGradient(player.x, player.y, player.x + player.w, player.y + player.h);
+            grd.addColorStop(0, '#ff3c3c');
+            grd.addColorStop(0.5, '#cc1a1a');
+            grd.addColorStop(1, '#991111');
+            ctx.fillStyle = grd;
+            ctx.strokeStyle = '#ffaa66';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.roundRect(player.x, player.y, player.w, player.h, 8);
+            ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffdd99';
+            ctx.beginPath();
+            ctx.arc(player.x + 6, player.y + 6, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(player.x + player.w - 6, player.y + 6, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ff4422';
+            ctx.beginPath();
+            ctx.arc(player.x + 6, player.y + player.h - 6, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(player.x + player.w - 6, player.y + player.h - 6, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#88ccff66';
+            ctx.fillRect(player.x + 6, player.y + 8, player.w - 12, 14);
+
+            // popup text
+            if (popupText) {
+                ctx.shadowBlur = 0;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 44px monospace';
+                ctx.fillStyle = popupText.color;
+                ctx.shadowColor = '#000000aa';
+                ctx.shadowBlur = 20;
+                ctx.fillText(popupText.text, popupText.x, popupText.y);
+                ctx.shadowBlur = 0;
+            }
+
+            // game over
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0, 0, W, H);
+                ctx.shadowBlur = 0;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 56px monospace';
+                const isParkWin = mode === 'parking' && parkTimer <= PARK_TIME_LIMIT && parkTimer > 20;
+                if (isParkWin) {
+                    ctx.fillStyle = '#80ff90';
+                    ctx.fillText('✅ PERFECT PARK!', 400, 220);
+                    ctx.font = '28px monospace';
+                    ctx.fillStyle = '#c0e0ff';
+                    ctx.fillText(`+${score} pts  ⭐ BEST: ${highScore}`, 400, 290);
+                } else {
+                    ctx.fillStyle = '#ff6060';
+                    ctx.fillText('💥 CRASH', 400, 220);
+                    ctx.font = '28px monospace';
+                    ctx.fillStyle = '#c0d0e0';
+                    ctx.fillText(`Score: ${score}  ⭐ Best: ${highScore}`, 400, 290);
+                }
+                ctx.font = '18px monospace';
+                ctx.fillStyle = '#8899bb';
+                ctx.fillText('Tap RESTART or switch mode', 400, 360);
+            }
+
+            // HUD
+            ctx.shadowBlur = 0;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillStyle = '#b0d0ffcc';
+            if (mode === 'driving' && !gameOver) {
+                ctx.fillText(`🚦 ${obstacles.length} vehicles`, roadOffset + 20, H - 36);
+                ctx.fillText(`⏱ ${Math.floor(frame/60)}s`, roadOffset + 200, H - 36);
+                ctx.fillStyle = '#f0c06088';
+                ctx.fillText(`⚡ x${speedMultiplier.toFixed(1)}`, roadOffset + 360, H - 36);
+            }
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#f0c060';
+            ctx.font = 'bold 18px monospace';
+            ctx.fillText(`★ ${score}`, W - 24, 22);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#5f7fa0';
+            ctx.font = '12px monospace';
+            ctx.fillText(mode === 'driving' ? '🚗 DODGE TRAFFIC' : '🅿️ PARK IN GREEN ZONE', 400, 6);
+        }
+
+        // ---- roundRect ----
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                this.closePath();
+                return this;
+            };
+        }
+
+        // ---- mode switch ----
+        function setMode(newMode) {
+            mode = newMode;
+            modeSpan.textContent = newMode === 'driving' ? '🚗 DRIVING' : '🅿️ PARKING';
+            document.getElementById('modeDrive').classList.toggle('active', newMode === 'driving');
+            document.getElementById('modePark').classList.toggle('active', newMode === 'parking');
+            resetGame();
+            if (mode === 'parking') {
+                parkZone.x = 180 + Math.random() * 340;
+                parkZone.y = 160 + Math.random() * 200;
+                parkZone.w = 70 + Math.floor(Math.random() * 30);
+                parkZone.h = 60 + Math.floor(Math.random() * 25);
+            }
+            player.x = 400;
+            player.y = 480;
+            // reset joystick
+            joystickDX = 0;
+            joystickDY = 0;
+            joystickKnob.style.transform = 'translate(0px, 0px)';
+            joystickActive = false;
+        }
+
+        // ---- loop ----
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // ---- keyboard ----
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // ---- touch joystick ----
+        let joystickTouchId = null;
+
+        function handleJoystickStart(clientX, clientY) {
+            const rect = joystickArea.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = clientX - cx;
+            const dy = clientY - cy;
+            const dist = Math.hypot(dx, dy);
+            const clamped = Math.min(dist, maxDist);
+            const angle = Math.atan2(dy, dx);
+            const finalDx = Math.cos(angle) * clamped;
+            const finalDy = Math.sin(angle) * clamped;
+            joystickDX = finalDx / maxDist;
+            joystickDY = finalDy / maxDist;
+            joystickKnob.style.transform = `translate(${finalDx}px, ${finalDy}px)`;
+            joystickActive = true;
+        }
+
+        function handleJoystickMove(clientX, clientY) {
+            if (!joystickActive) return;
+            const rect = joystickArea.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = clientX - cx;
+            const dy = clientY - cy;
+            const dist = Math.hypot(dx, dy);
+            const clamped = Math.min(dist, maxDist);
+            const angle = Math.atan2(dy, dx);
+            const finalDx = Math.cos(angle) * clamped;
+            const final
