@@ -880,4 +880,120 @@
             const clamped = Math.min(dist, maxDist);
             const angle = Math.atan2(dy, dx);
             const finalDx = Math.cos(angle) * clamped;
-            const final
+            const finalDy = Math.sin(angle) * clamped;
+            joystickDX = finalDx / maxDist;
+            joystickDY = finalDy / maxDist;
+            joystickKnob.style.transform = `translate(${finalDx}px, ${finalDy}px)`;
+        }
+
+        function handleJoystickEnd() {
+            joystickActive = false;
+            joystickDX = 0;
+            joystickDY = 0;
+            joystickKnob.style.transform = 'translate(0px, 0px)';
+            joystickTouchId = null;
+        }
+
+        // joystick touch events
+        joystickArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const t = e.changedTouches[0];
+            joystickTouchId = t.identifier;
+            handleJoystickStart(t.clientX, t.clientY);
+        }, { passive: false });
+
+        joystickArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (const t of e.changedTouches) {
+                if (t.identifier === joystickTouchId || joystickTouchId === null) {
+                    if (joystickTouchId === null) joystickTouchId = t.identifier;
+                    handleJoystickMove(t.clientX, t.clientY);
+                }
+            }
+        }, { passive: false });
+
+        joystickArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            for (const t of e.changedTouches) {
+                if (t.identifier === joystickTouchId) {
+                    handleJoystickEnd();
+                }
+            }
+        }, { passive: false });
+
+        joystickArea.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            handleJoystickEnd();
+        }, { passive: false });
+
+        // mouse drag support for desktop testing
+        let mouseJoystick = false;
+        joystickArea.addEventListener('mousedown', (e) => {
+            mouseJoystick = true;
+            handleJoystickStart(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (mouseJoystick) {
+                handleJoystickMove(e.clientX, e.clientY);
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            if (mouseJoystick) {
+                mouseJoystick = false;
+                handleJoystickEnd();
+            }
+        });
+
+        // ---- action button (restart / quick reset) ----
+        actionBtn.addEventListener('click', () => {
+            resetGame();
+            // if parking, re-randomize zone
+            if (mode === 'parking') {
+                parkZone.x = 180 + Math.random() * 340;
+                parkZone.y = 160 + Math.random() * 200;
+                parkZone.w = 70 + Math.floor(Math.random() * 30);
+                parkZone.h = 60 + Math.floor(Math.random() * 25);
+            }
+            player.x = 400;
+            player.y = 480;
+        });
+        actionBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            resetGame();
+            if (mode === 'parking') {
+                parkZone.x = 180 + Math.random() * 340;
+                parkZone.y = 160 + Math.random() * 200;
+                parkZone.w = 70 + Math.floor(Math.random() * 30);
+                parkZone.h = 60 + Math.floor(Math.random() * 25);
+            }
+            player.x = 400;
+            player.y = 480;
+        }, { passive: false });
+
+        // ---- UI buttons ----
+        document.getElementById('modeDrive').addEventListener('click', () => setMode('driving'));
+        document.getElementById('modePark').addEventListener('click', () => setMode('parking'));
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetGame();
+            if (mode === 'parking') {
+                parkZone.x = 180 + Math.random() * 340;
+                parkZone.y = 160 + Math.random() * 200;
+                parkZone.w = 70 + Math.floor(Math.random() * 30);
+                parkZone.h = 60 + Math.floor(Math.random() * 25);
+            }
+            player.x = 400;
+            player.y = 480;
+        });
+
+        // ---- start ----
+        resetGame();
+        setMode('driving');
+        loop();
+
+        // focus canvas for keys
+        canvas.setAttribute('tabindex', '0');
+        canvas.focus();
+        canvas.addEventListener('click', () => canvas.focus());
+    </script>
+</body>
+</html>
